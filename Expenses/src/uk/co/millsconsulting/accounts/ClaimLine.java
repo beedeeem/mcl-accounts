@@ -5,6 +5,8 @@
  */
 package uk.co.millsconsulting.accounts;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.GregorianCalendar;
 
 /**
@@ -16,14 +18,19 @@ public class ClaimLine {
     private int lineNumber;
     private GregorianCalendar lineDate;
     private String description;
-    private double vatEx;
-    private double vat;
-    private double totalPayable;
+    private BigDecimal vatEx;
+    private BigDecimal vat;
+    private BigDecimal totalPayable;
     private int receiptNumber;
 
     //
     // CONSTRUCTORS
     //
+    public ClaimLine() {
+        vatEx = new BigDecimal(BigInteger.ZERO);
+        vat = new BigDecimal(BigInteger.ZERO);
+        totalPayable = new BigDecimal(BigInteger.ZERO);
+    }
     
     //
     // PUBLIC METHODS
@@ -33,6 +40,7 @@ public class ClaimLine {
     //
     //PRIVATE METHODS
     //
+    
     
     //
     // GETTERS and SETTERS - note setTotalPayable is PRIVATE not public.
@@ -62,31 +70,32 @@ public class ClaimLine {
         this.description = description;
     }
 
-    public double getVatEx() {
+    public BigDecimal getVatEx() {
         return vatEx;
     }
 
-    public void setVatEx(double vatEx) {
-        this.vatEx = vatEx;
-        this.totalPayable = vat + vatEx;
+    public void setVatEx(BigDecimal vatEx) {
+        this.vatEx = vatEx.setScale(2, BigDecimal.ROUND_FLOOR);
+        setTotalPayable();
     }
 
-    public double getVat() {
+    public BigDecimal getVat() {
         return vat;
     }
 
-    public void setVat(double vat) {
-        this.vat = vat;
-        this.totalPayable = vat + vatEx;
+    public void setVat(BigDecimal vat) {
+        this.vat = vat.setScale(2, BigDecimal.ROUND_FLOOR);
+        setTotalPayable();
     }
 
-    public double getTotalPayable() {
+    public BigDecimal getTotalPayable() {
         return totalPayable;
     }
 
     //NOTE - This one is PRIVATE - users can never set the total specifically
-    private void setTotalPayable(double totalPayable) {
-        this.totalPayable = vatEx + vat;
+    private void setTotalPayable() {
+        this.totalPayable = vatEx.add(vat);
+        this.totalPayable = totalPayable.setScale(2, BigDecimal.ROUND_FLOOR);
     }
 
     public int getReceiptNumber() {

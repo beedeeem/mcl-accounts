@@ -5,6 +5,8 @@
  */
 package uk.co.millsconsulting.accounts;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 
@@ -18,9 +20,9 @@ public class ClaimForm {
     private GregorianCalendar startDate;
     private GregorianCalendar endDate;
     private String consultant;
-    private double totalVatEx;
-    private double totalVat;
-    private double totalPayable;
+    private BigDecimal totalVatEx;
+    private BigDecimal totalVat;
+    private BigDecimal totalPayable;
     
     private ClaimStatus claimStatus;
     
@@ -48,8 +50,16 @@ public class ClaimForm {
     // PUBLIC METHODS
     //
     
-    public void addLine(ClaimLine line) {
+    public void addLine(ClaimLine line) throws DateOutOfRangeException {
+        
+        if (line.getLineDate() != null) {
+            // check that the date of the claim line fits with our overall claim
+            if (line.getLineDate().before(startDate) || line.getLineDate().after(endDate)) {
+                throw new DateOutOfRangeException("The line date is outside the claim date");
+            } 
+        } 
         claimLines.add(line);
+        setTotalAmounts();
     }
     
     
@@ -59,17 +69,16 @@ public class ClaimForm {
     //
 
     private void setTotalAmounts() {
-        //interate thru the claim lines adding up as we go
-        if (claimLines.isEmpty()) {
-            totalVatEx = 0;
-            totalVat = 0;
-            totalPayable = 0;
-        } else {
-            
-            for (ClaimLine line: claimLines) {
-                totalVatEx += line.getVatEx();
-                totalVat += line.getVat();
-                totalPayable += line.getTotalPayable();
+        totalPayable = new BigDecimal(BigInteger.ZERO);
+        totalVat = new BigDecimal(BigInteger.ZERO);
+        totalVatEx = new BigDecimal(BigInteger.ZERO);
+        
+        // if the list of claim lines isn't empty, iterate thru it adding up as we go
+        if (!claimLines.isEmpty()) {
+            for (ClaimLine line : claimLines) {
+                totalPayable = totalPayable.add(line.getTotalPayable());
+                totalVatEx = totalVatEx.add(line.getVatEx());
+                totalVat = totalVat.add(line.getVat());
             }
         }
     }
@@ -110,15 +119,15 @@ public class ClaimForm {
         this.consultant = consultant;
     }
 
-    public double getTotalVatEx() {
+    public BigDecimal getTotalVatEx() {
         return totalVatEx;
     }
 
-    public double getTotalVat() {
+    public BigDecimal getTotalVat() {
         return totalVat;
     }
 
-    public double getTotalPayable() {
+    public BigDecimal getTotalPayable() {
         return totalPayable;
     }
 
